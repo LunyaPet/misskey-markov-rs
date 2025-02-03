@@ -1,10 +1,11 @@
 use std::fs::FileType;
 
 use filetime::FileTime;
+use reqwest::header::TE;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use crate::cred::{read_instance, read_token};
+use crate::conf::{read_instance, read_posting_token};
 
 #[derive(Serialize, Deserialize)]
 pub struct User {
@@ -63,10 +64,9 @@ fn write_file(posts: &Vec<Post>) {
     serde_json::to_writer_pretty(writer, &posts).unwrap();
 }
 
-fn get_posts_until_last(user_id: String, last_id: String) -> Vec<Post> {
-    println!("Getting posts until last id: {}", last_id);
+fn get_posts_until_last(user_id: String, token: String, last_id: String) -> Vec<Post> {
+    println!("{} Getting posts until last id: {}", user_id, last_id);
     let instance = read_instance();
-    let token = read_token();
 
     let mut out = reqwest::blocking::Client::new()
         .post(format!("https://{}/api/users/notes", instance))
@@ -86,7 +86,7 @@ fn get_posts_until_last(user_id: String, last_id: String) -> Vec<Post> {
     match out.last() {
         Some(last_el) => {
             let last_id = last_el.id.clone();
-            let mut posts = get_posts_until_last(user_id, last_id);
+            let mut posts = get_posts_until_last(user_id, token, last_id);
 
             out.append(&mut posts);
         }
@@ -98,14 +98,14 @@ fn get_posts_until_last(user_id: String, last_id: String) -> Vec<Post> {
     out
 }
 
-pub fn get_posts(user_id: String) -> Vec<Post> {
+pub fn get_posts(user_id: String, token: String) -> Vec<Post> {
+    println!("Getting posts for {}", user_id);
     if let Some(posts) = read_existing_file() {
         return posts;
     }
 
     let mut posts = Vec::new();
     let instance = read_instance();
-    let token = read_token();
 
     reqwest::blocking::Client::new()
         .post(format!("https://{}/api/users/notes", instance))
@@ -135,10 +135,12 @@ pub fn get_posts(user_id: String) -> Vec<Post> {
         });
 
     let last_id = posts.last().unwrap().id.clone();
-    let mut posts_2 = get_posts_until_last(user_id, last_id);
+    let mut posts_2 = get_posts_until_last(user_id.clone(), token, last_id);
     posts.append(&mut posts_2);
 
     write_file(&posts);
+
+    println!("Fetched {} posts from {}", &posts.len(), user_id);
 
     posts
 }

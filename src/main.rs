@@ -1,25 +1,27 @@
 use std::process::exit;
 
 use markov::Chain;
-use serde_json::json;
 
-mod cred;
+mod conf;
 mod posts;
 
 fn main() {
-    let posts = posts::get_posts("a0cj5mqxoz2e0001".to_string());
-    println!("Fetched posts: {}", posts.len());
+    let mut posts: Vec<posts::Post> = Vec::new();
     let mut chain = Chain::new();
+
+    let accounts = conf::read_accounts();
+
+    for account in accounts {
+        let mut fetched_posts = posts::get_posts(account.id, account.token);
+        posts.append(&mut fetched_posts);
+    }
+
     for post in posts {
         if post.text.is_none() {
             continue;
         }
 
-        if post.cw.is_some() {
-            continue;
-        }
-
-        chain.feed_str(post.text.as_ref().unwrap().as_str());
+        chain.feed_str(post.text.unwrap().as_str());
     }
 
     println!("{}", chain.generate_str());

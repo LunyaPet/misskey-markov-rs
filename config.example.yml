@@ -1,0 +1,5 @@
+posting_token: # posting token
+instance: # instance without https://
+accounts:
+  - id: # account id
+    token: #account token
