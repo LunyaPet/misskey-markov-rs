@@ -1,3 +1,6 @@
+use std::fs::FileType;
+
+use filetime::FileTime;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -21,6 +24,43 @@ pub struct Post {
 #[derive(Serialize, Deserialize)]
 struct Posts {
     posts: Vec<Post>,
+}
+
+fn read_existing_file() -> Option<Vec<Post>> {
+    let path = "./posts.json";
+
+    let metadata = match std::fs::metadata(path) {
+        Ok(metadata) => metadata,
+        Err(_) => return None,
+    };
+
+    if !metadata.is_file() {
+        println!("File is not a file, deleting");
+        std::fs::remove_file(path).unwrap();
+        return None;
+    }
+
+    let modified = FileTime::from_last_modification_time(&metadata);
+    let now = FileTime::now();
+
+    if now.seconds() - modified.seconds() > 24 * 3600 * 7 {
+        println!("File is older than a week, deleting");
+        std::fs::remove_file(path).unwrap();
+        return None;
+    }
+
+    let file = std::fs::File::open(path).unwrap();
+    let reader = std::io::BufReader::new(file);
+    let posts: Vec<Post> = serde_json::from_reader(reader).unwrap();
+
+    Some(posts)
+}
+
+fn write_file(posts: &Vec<Post>) {
+    let path = "./posts.json";
+    let file = std::fs::File::create(path).unwrap();
+    let writer = std::io::BufWriter::new(file);
+    serde_json::to_writer_pretty(writer, &posts).unwrap();
 }
 
 fn get_posts_until_last(user_id: String, last_id: String) -> Vec<Post> {
@@ -59,6 +99,10 @@ fn get_posts_until_last(user_id: String, last_id: String) -> Vec<Post> {
 }
 
 pub fn get_posts(user_id: String) -> Vec<Post> {
+    if let Some(posts) = read_existing_file() {
+        return posts;
+    }
+
     let mut posts = Vec::new();
     let instance = read_instance();
     let token = read_token();
@@ -93,6 +137,8 @@ pub fn get_posts(user_id: String) -> Vec<Post> {
     let last_id = posts.last().unwrap().id.clone();
     let mut posts_2 = get_posts_until_last(user_id, last_id);
     posts.append(&mut posts_2);
+
+    write_file(&posts);
 
     posts
 }
