@@ -24,7 +24,11 @@ fn main() {
         chain.feed_str(post.text.unwrap().as_str());
     }
 
-    println!("{}", chain.generate_str());
+    let str = chain.generate_str();
+
+    println!("{}", &str);
+
+    posts::create_post(str);
 
     exit(0);
 }

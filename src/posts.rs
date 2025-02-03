@@ -144,3 +144,27 @@ pub fn get_posts(user_id: String, token: String) -> Vec<Post> {
 
     posts
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct CreatedNote {
+    createdNote: Post,
+}
+
+pub fn create_post(text: String) {
+    let instance = read_instance();
+    let posting_token = read_posting_token();
+
+    let res = reqwest::blocking::Client::new()
+        .post(format!("https://{}/api/notes/create", instance))
+        .header("Authorization", format!("Bearer {}", posting_token.trim()))
+        .json(&json!({
+            "text": text,
+            "cw": "Markov Generated Post",
+        }))
+        .send()
+        .unwrap()
+        .json::<CreatedNote>()
+        .unwrap();
+
+    println!("https://{}/notes/{}", instance, res.createdNote.id);
+}
