@@ -6,15 +6,15 @@ stages:
   - build
   - test
 
+before_script:
+  - cargo build --release
+
 build:
   stage: build
-  script:
-    - rustc --version && cargo --version
-    - cargo build --release
   artifacts:
     paths:
       - target/release/markovify-rs
-      
+
 test:
   stage: test
   script:
