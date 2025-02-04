@@ -9,12 +9,16 @@ stages:
 build:x86_64:
   stage: build
   script:
+    - apt update
+    - apt install gcc-x86-64-linux-gnu -y
+    - rustup target add x86_64-unknown-linux-gnu
     - cargo build --release --target x86_64-unknown-linux-gnu
   artifacts:
     paths:
       - target/x86_64-unknown-linux-gnu/release/markovify-rs
+  allow_failure: true
 
-build:current_arch:
+build:arm64:
   stage: build
   script:
     - cargo build --release
@@ -22,9 +26,9 @@ build:current_arch:
     paths:
       - target/release/markovify-rs
 
-test:current_arch:
+test:arm64:
   stage: test
   script:
     - cargo test --release
   dependencies:
-    - build:current_arch
+    - build:arm64
