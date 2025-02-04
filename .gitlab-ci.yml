@@ -6,16 +6,25 @@ stages:
   - build
   - test
 
-before_script:
-  - cargo build --release
-
-build:
+build:x86_64:
   stage: build
+  script:
+    - cargo build --release --target x86_64-unknown-linux-gnu
+  artifacts:
+    paths:
+      - target/x86_64-unknown-linux-gnu/release/markovify-rs
+
+build:current_arch:
+  stage: build
+  script:
+    - cargo build --release
   artifacts:
     paths:
       - target/release/markovify-rs
 
-test:
+test:current_arch:
   stage: test
   script:
     - cargo test --release
+  dependencies:
+    - build:current_arch
