@@ -1,7 +1,5 @@
-use std::fs::FileType;
 
 use filetime::FileTime;
-use reqwest::header::TE;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -134,9 +132,11 @@ pub fn get_posts(user_id: String, token: String) -> Vec<Post> {
             });
         });
 
-    let last_id = posts.last().unwrap().id.clone();
-    let mut posts_2 = get_posts_until_last(user_id.clone(), token, last_id);
-    posts.append(&mut posts_2);
+    if let Some(last_post) = posts.last() {
+        let last_id = last_post.id.clone();
+        let mut posts_2 = get_posts_until_last(user_id.clone(), token, last_id);
+        posts.append(&mut posts_2);
+    }
 
     write_file(&posts);
 
@@ -147,7 +147,7 @@ pub fn get_posts(user_id: String, token: String) -> Vec<Post> {
 
 #[derive(Serialize, Deserialize)]
 pub struct CreatedNote {
-    createdNote: Post,
+    created_note: Post,
 }
 
 pub fn create_post(text: String) {
@@ -166,5 +166,35 @@ pub fn create_post(text: String) {
         .json::<CreatedNote>()
         .unwrap();
 
-    println!("https://{}/notes/{}", instance, res.createdNote.id);
+    println!("https://{}/notes/{}", instance, res.created_note.id);
+}
+
+
+#[cfg(test)]
+#[serial_test::serial]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_posts() {
+        let user_id = std::env::var("MISSKEY_USER_ID").unwrap();
+        let token = std::env::var("MISSKEY_TOKEN").unwrap();
+
+        let config = format!(r#"
+posting_token: none
+instance: social.mldchan.dev
+accounts:
+  - id: {user_id}
+    token: {token}
+"#, user_id = user_id, token = token);
+
+        if std::fs::exists("posts.json").unwrap() {
+            std::fs::remove_file("posts.json").unwrap();
+        }
+
+        std::fs::write("config.yml", config).unwrap();
+
+        let posts = get_posts(user_id, token);
+        assert!(posts.len() > 0);
+    }
 }

@@ -44,3 +44,45 @@ pub fn read_accounts() -> Vec<PostsAccount> {
 
     config.accounts
 }
+
+#[cfg(test)]
+#[serial_test::serial]
+mod tests {
+    use std::{thread, time::Duration};
+
+    use super::*;
+
+    #[test]
+    fn test_read_config() {
+
+        // Write testing configuration
+        let config = r#"
+posting_token: token
+instance: misskey.io
+accounts:
+  - id: 1234567890
+    token: token
+"#;
+
+        fs::write("config.yml", config).unwrap();
+
+        let config = read_config();
+        assert_eq!(config.posting_token, "token");
+        assert_eq!(config.instance, "misskey.io");
+        assert_eq!(config.accounts.len(), 1);
+        assert_eq!(config.accounts[0].id, "1234567890");
+        assert_eq!(config.accounts[0].token, "token");
+
+        let posting_token = read_posting_token();
+        assert_eq!(posting_token, "token");
+
+        let instance = read_instance();
+        assert_eq!(instance, "misskey.io");
+
+        let accounts = read_accounts();
+        assert_eq!(accounts.len(), 1);
+        assert_eq!(accounts[0].id, "1234567890");
+        assert_eq!(accounts[0].token, "token");
+    }
+
+}
