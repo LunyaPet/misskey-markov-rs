@@ -1,5 +1,5 @@
-
 use filetime::FileTime;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -169,6 +169,12 @@ pub fn create_post(text: String) {
     println!("https://{}/notes/{}", instance, res.created_note.id);
 }
 
+pub fn sanitize_mentions(text: String) -> String {
+    // @<mention> and @<mention>@<instance> are not allowed
+    // regex
+    let re = Regex::new(r"(@\w+)(@[\w.]+)?").unwrap();
+    re.replace_all(&text, "<plain>$1$2</plain>").to_string()
+}
 
 #[cfg(test)]
 #[serial_test::serial]
@@ -180,13 +186,17 @@ mod tests {
         let user_id = std::env::var("MISSKEY_USER_ID").unwrap();
         let token = std::env::var("MISSKEY_TOKEN").unwrap();
 
-        let config = format!(r#"
+        let config = format!(
+            r#"
 posting_token: none
 instance: social.mldchan.dev
 accounts:
   - id: {user_id}
     token: {token}
-"#, user_id = user_id, token = token);
+"#,
+            user_id = user_id,
+            token = token
+        );
 
         if std::fs::exists("posts.json").unwrap() {
             std::fs::remove_file("posts.json").unwrap();
@@ -196,5 +206,30 @@ accounts:
 
         let posts = get_posts(user_id, token);
         assert!(posts.len() > 0);
+    }
+
+    // Test sanitize mentions method
+    #[test]
+    fn test_sanitize_mentions() {
+        let mention = "@markov";
+        let expected = "<plain>@markov</plain>";
+        let result = sanitize_mentions(mention.to_string());
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_sanitize_mentions_instance() {
+        let mention = "@markov@mldchan.dev";
+        let expected = "<plain>@markov@mldchan.dev</plain>";
+        let result = sanitize_mentions(mention.to_string());
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_sanitize_mentions_multiple() {
+        let mention = "@markov@mldchan.dev @markov";
+        let expected = "<plain>@markov@mldchan.dev</plain> <plain>@markov</plain>";
+        let result = sanitize_mentions(mention.to_string());
+        assert_eq!(result, expected);
     }
 }

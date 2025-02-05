@@ -4,7 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-reqwest = { version = "0.12", features = ["blocking", "json", "native-tls-vendored"] }
+reqwest = { version = "0.12", features = [
+    "blocking",
+    "json",
+    "native-tls-vendored",
+] }
 tokio = { version = "1.43.0", features = ["full"] }
 serde = { version = "1.0.217", features = ["derive"] }
 serde_json = "1.0.138"
@@ -12,3 +16,4 @@ serde_yml = "0.0.12"
 markov = "1.1.0"
 filetime = "0.2.25"
 serial_test = "3.2.0"
+regex = "1.11.1"

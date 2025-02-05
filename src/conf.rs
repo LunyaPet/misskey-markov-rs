@@ -48,13 +48,10 @@ pub fn read_accounts() -> Vec<PostsAccount> {
 #[cfg(test)]
 #[serial_test::serial]
 mod tests {
-    use std::{thread, time::Duration};
-
     use super::*;
 
     #[test]
     fn test_read_config() {
-
         // Write testing configuration
         let config = r#"
 posting_token: token
@@ -84,5 +81,4 @@ accounts:
         assert_eq!(accounts[0].id, "1234567890");
         assert_eq!(accounts[0].token, "token");
     }
-
 }
