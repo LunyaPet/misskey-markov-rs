@@ -18,6 +18,11 @@ A markov bot for [Misskey](https://misskey-hub.net/) instances. Written in Rust.
 5. Push your changes to your forked repository.
 6. Create a pull request.
 
+## Testing
+
+1. Set the `MISSKEY_USER_ID` and `MISSKEY_TOKEN` environment variables before running the tests.
+2. The test should pass if your forked repository is working correctly.
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0. See the LICENSE file for more information.
