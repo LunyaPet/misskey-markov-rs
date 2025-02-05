@@ -154,11 +154,13 @@ pub fn create_post(text: String) {
     let instance = read_instance();
     let posting_token = read_posting_token();
 
+    let sanitized_text = sanitize_mentions(text);
+
     let res = reqwest::blocking::Client::new()
         .post(format!("https://{}/api/notes/create", instance))
         .header("Authorization", format!("Bearer {}", posting_token.trim()))
         .json(&json!({
-            "text": text,
+            "text": sanitized_text,
             "cw": "Markov Generated Post",
         }))
         .send()
