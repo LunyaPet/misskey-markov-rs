@@ -9,8 +9,6 @@ test:
   script:
     - cargo build --release
     - cargo test --release
-  dependencies:
-    - build:arm64
   artifacts:
     paths:
       - target/release/markovify-rs
