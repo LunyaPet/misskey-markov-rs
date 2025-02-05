@@ -1,11 +1,10 @@
-
 default:
   image: rust:latest
 
 stages:
   - test
 
-test:arm64:
+test:
   stage: test
   script:
     - cargo build --release
