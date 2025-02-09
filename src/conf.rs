@@ -7,7 +7,8 @@ pub struct Config {
     posting_token: String,
     instance: String,
     accounts: Vec<PostsAccount>,
-    testing: Option<TestingConfiguration>
+    testing: Option<TestingConfiguration>,
+    cw: Option<ContentWarningConfiguration>
 }
 
 #[derive(Serialize, Deserialize)]
@@ -19,6 +20,17 @@ pub struct PostsAccount {
 #[derive(Serialize, Deserialize)]
 pub struct TestingConfiguration {
     pub disable_post: Option<bool> // Test configuration to disable posting when testing functionality
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct ContentWarningConfiguration {
+    pub enable: Option<bool>,
+    pub cw: Option<String>
+}
+
+pub struct ReturnedCWConfiguration {
+    pub enable: bool,
+    pub cw: String
 }
 
 fn read_config() -> Config {
@@ -68,6 +80,24 @@ pub fn read_disable_post() -> bool {
     false
 }
 
+pub fn read_cw_config() -> ReturnedCWConfiguration {
+    let config = read_config();
+
+    if config.cw.is_none() {
+        return ReturnedCWConfiguration {
+            enable: true,
+            cw: "Markov Generated Post".to_string()
+        };
+    }
+
+    let cw_config = config.cw.unwrap();
+
+    ReturnedCWConfiguration {
+        enable: cw_config.enable.unwrap_or(true),
+        cw: cw_config.cw.unwrap_or("Markov Generated Post".to_string())
+    }
+}
+
 #[cfg(test)]
 #[serial_test::serial]
 mod tests {
@@ -109,5 +139,9 @@ accounts:
 
         let disable_post = read_disable_post();
         assert_eq!(disable_post, false);
+        
+        let cw_config = read_cw_config();
+        assert_eq!(cw_config.enable, true);
+        assert_eq!(cw_config.cw, "Markov Generated Post");
     }
 }

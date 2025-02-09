@@ -3,7 +3,7 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use crate::conf::{read_disable_post, read_instance, read_posting_token};
+use crate::conf::{read_cw_config, read_disable_post, read_instance, read_posting_token};
 
 #[derive(Serialize, Deserialize)]
 pub struct User {
@@ -158,13 +158,20 @@ pub fn create_post(text: String) {
     let sanitized_text = sanitize_mentions(text);
 
     if !read_disable_post() { 
+        let cw_config = read_cw_config();
+
+        let mut json = json!({
+            "text": sanitized_text
+        });
+
+        if cw_config.enable {
+            json["cw"] = json!(cw_config.cw);
+        }
+
         let res = reqwest::blocking::Client::new()
             .post(format!("https://{}/api/notes/create", instance))
             .header("Authorization", format!("Bearer {}", posting_token.trim()))
-            .json(&json!({
-                "text": sanitized_text,
-                "cw": "Markov Generated Post",
-            }))
+            .json(&json)
             .send()
             .unwrap()
             .json::<CreatedNote>()
@@ -173,6 +180,12 @@ pub fn create_post(text: String) {
         println!("https://{}/notes/{}", instance, res.created_note.id);
     } else {
         println!("The following post would have been created:\n{}", sanitized_text);
+        let cw_config = read_cw_config();
+        if cw_config.enable {
+            println!("The following CW would have been set:\n{}", cw_config.cw);
+        } else {
+            println!("No CW would have been set");
+        }
     }
 }
 
