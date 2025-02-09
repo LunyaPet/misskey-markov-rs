@@ -21,4 +21,4 @@ buid:
     paths:
       - target/release/x86_64-unknown-linux-musl/release/markovify-rs
   script:
-    - cargo build -r --target aarch64-unknown-linux-musl
+    - cargo build -r --target x86_64-unknown-linux-musl
