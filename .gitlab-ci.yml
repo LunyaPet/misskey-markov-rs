@@ -3,6 +3,7 @@ default:
 
 stages:
   - test
+  - build-x86_64
 
 test:
   stage: test
@@ -12,3 +13,12 @@ test:
   artifacts:
     paths:
       - target/release/markovify-rs
+
+buid:
+  stage: build-x86_64
+  image: messense/rust-musl-cross:x86_64-musl
+  artifacts:
+    paths:
+      - target/release/x86_64-unknown-linux-musl/release/markovify-rs
+  script:
+    - cargo build -r --target aarch64-unknown-linux-musl
