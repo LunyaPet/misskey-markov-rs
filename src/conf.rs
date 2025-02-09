@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct Config {
     posting_token: String,
     instance: String,
+    multiplier: Option<i64>,
     accounts: Vec<PostsAccount>,
     testing: Option<TestingConfiguration>,
     cw: Option<ContentWarningConfiguration>
@@ -98,6 +99,12 @@ pub fn read_cw_config() -> ReturnedCWConfiguration {
     }
 }
 
+pub fn read_multiplier() -> i64 {
+    let config = read_config();
+
+    config.multiplier.unwrap_or(1)
+}
+
 #[cfg(test)]
 #[serial_test::serial]
 mod tests {
@@ -143,5 +150,8 @@ accounts:
         let cw_config = read_cw_config();
         assert_eq!(cw_config.enable, true);
         assert_eq!(cw_config.cw, "Markov Generated Post");
+
+        let multiplier = read_multiplier();
+        assert_eq!(multiplier, 1);
     }
 }

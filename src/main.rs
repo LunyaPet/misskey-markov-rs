@@ -24,7 +24,17 @@ fn main() {
         chain.feed_str(post.text.unwrap().as_str());
     }
 
-    let str = chain.generate_str();
+    let mut str = String::new();
+
+    let chunk_1 = chain.generate_str();
+    str.push_str(&chunk_1);
+    let mut last_token = chunk_1.split_whitespace().last().unwrap().to_string();
+
+    for _ in 1..conf::read_multiplier() {
+        let chunk = chain.generate_str_from_token(&last_token);
+        str.push_str(&chunk);
+        last_token = chunk.split_whitespace().last().unwrap().to_string();
+    }
 
     println!("{}", &str);
 
