@@ -19,6 +19,6 @@ buid:
   image: messense/rust-musl-cross:x86_64-musl
   artifacts:
     paths:
-      - target/release/x86_64-unknown-linux-musl/release/markovify-rs
+      - target/x86_64-unknown-linux-musl/release/markovify-rs
   script:
     - cargo build -r --target x86_64-unknown-linux-musl
