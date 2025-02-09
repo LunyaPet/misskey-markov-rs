@@ -3,7 +3,7 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use crate::conf::{read_instance, read_posting_token};
+use crate::conf::{read_disable_post, read_instance, read_posting_token};
 
 #[derive(Serialize, Deserialize)]
 pub struct User {
@@ -147,6 +147,7 @@ pub fn get_posts(user_id: String, token: String) -> Vec<Post> {
 
 #[derive(Serialize, Deserialize)]
 pub struct CreatedNote {
+    #[serde(rename = "createdNote")]
     created_note: Post,
 }
 
@@ -156,19 +157,23 @@ pub fn create_post(text: String) {
 
     let sanitized_text = sanitize_mentions(text);
 
-    let res = reqwest::blocking::Client::new()
-        .post(format!("https://{}/api/notes/create", instance))
-        .header("Authorization", format!("Bearer {}", posting_token.trim()))
-        .json(&json!({
-            "text": sanitized_text,
-            "cw": "Markov Generated Post",
-        }))
-        .send()
-        .unwrap()
-        .json::<CreatedNote>()
-        .unwrap();
+    if !read_disable_post() { 
+        let res = reqwest::blocking::Client::new()
+            .post(format!("https://{}/api/notes/create", instance))
+            .header("Authorization", format!("Bearer {}", posting_token.trim()))
+            .json(&json!({
+                "text": sanitized_text,
+                "cw": "Markov Generated Post",
+            }))
+            .send()
+            .unwrap()
+            .json::<CreatedNote>()
+            .unwrap();
 
-    println!("https://{}/notes/{}", instance, res.created_note.id);
+        println!("https://{}/notes/{}", instance, res.created_note.id);
+    } else {
+        println!("The following post would have been created:\n{}", sanitized_text);
+    }
 }
 
 pub fn sanitize_mentions(text: String) -> String {

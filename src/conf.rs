@@ -7,12 +7,18 @@ pub struct Config {
     posting_token: String,
     instance: String,
     accounts: Vec<PostsAccount>,
+    testing: Option<TestingConfiguration>
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct PostsAccount {
     pub id: String,
     pub token: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct TestingConfiguration {
+    pub disable_post: Option<bool> // Test configuration to disable posting when testing functionality
 }
 
 fn read_config() -> Config {
@@ -43,6 +49,23 @@ pub fn read_accounts() -> Vec<PostsAccount> {
     let config = read_config();
 
     config.accounts
+}
+
+pub fn read_testing_config() -> Option<TestingConfiguration> {
+    let config = read_config();
+
+    config.testing
+}
+
+pub fn read_disable_post() -> bool {
+    let config = read_testing_config();
+    if let Some(testing_config) = config {
+        if let Some(disable_post) = testing_config.disable_post {
+            return disable_post;
+        }
+    }
+
+    false
 }
 
 #[cfg(test)]
@@ -80,5 +103,11 @@ accounts:
         assert_eq!(accounts.len(), 1);
         assert_eq!(accounts[0].id, "1234567890");
         assert_eq!(accounts[0].token, "token");
+
+        let testing_config = read_testing_config();
+        assert_eq!(testing_config.is_none(), true);
+
+        let disable_post = read_disable_post();
+        assert_eq!(disable_post, false);
     }
 }
