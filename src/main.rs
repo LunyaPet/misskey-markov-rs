@@ -26,14 +26,10 @@ fn main() {
 
     let mut str = String::new();
 
-    let chunk_1 = chain.generate_str();
-    str.push_str(&chunk_1);
-    let mut last_token = chunk_1.split_whitespace().last().unwrap().to_string();
-
     for _ in 1..conf::read_multiplier() {
-        let chunk = chain.generate_str_from_token(&last_token);
+        let chunk = chain.generate_str();
         str.push_str(&chunk);
-        last_token = chunk.split_whitespace().last().unwrap().to_string();
+        str.push_str(" ");
     }
 
     println!("{}", &str);
