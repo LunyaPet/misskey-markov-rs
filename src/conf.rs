@@ -9,7 +9,8 @@ pub struct Config {
     multiplier: Option<i64>,
     accounts: Vec<PostsAccount>,
     testing: Option<TestingConfiguration>,
-    cw: Option<ContentWarningConfiguration>
+    cw: Option<ContentWarningConfiguration>,
+    visibility: Option<String>
 }
 
 #[derive(Serialize, Deserialize)]
@@ -105,6 +106,17 @@ pub fn read_multiplier() -> i64 {
     config.multiplier.unwrap_or(1)
 }
 
+pub fn read_visibility() -> String {
+    let config = read_config();
+    let visibility = config.visibility.unwrap_or("public".to_string());
+
+    if visibility == "public" || visibility == "home" || visibility == "followers" {
+        return visibility;
+    }
+
+    "public".to_string()
+}
+
 #[cfg(test)]
 #[serial_test::serial]
 mod tests {
@@ -153,5 +165,8 @@ accounts:
 
         let multiplier = read_multiplier();
         assert_eq!(multiplier, 1);
+
+        let visibility = read_visibility();
+        assert_eq!(visibility, "public");
     }
 }

@@ -3,7 +3,7 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use crate::conf::{read_cw_config, read_disable_post, read_instance, read_posting_token};
+use crate::conf::{read_cw_config, read_disable_post, read_instance, read_posting_token, read_visibility};
 
 #[derive(Serialize, Deserialize)]
 pub struct User {
@@ -157,11 +157,14 @@ pub fn create_post(text: String) {
 
     let sanitized_text = sanitize_mentions(text);
 
+    let visibility = read_visibility();
+
     if !read_disable_post() { 
         let cw_config = read_cw_config();
 
         let mut json = json!({
-            "text": sanitized_text
+            "text": sanitized_text,
+            "visibility": visibility
         });
 
         if cw_config.enable {
