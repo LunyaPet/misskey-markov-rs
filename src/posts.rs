@@ -155,7 +155,8 @@ pub fn create_post(text: String) {
     let instance = read_instance();
     let posting_token = read_posting_token();
 
-    let sanitized_text = sanitize_mentions(text);
+    let sanitized_mentions = sanitize_mentions(text.clone());
+    let sanitized_formatting = sanitize_formatting(sanitized_mentions.clone());
 
     let visibility = read_visibility();
 
@@ -163,7 +164,7 @@ pub fn create_post(text: String) {
         let cw_config = read_cw_config();
 
         let mut json = json!({
-            "text": sanitized_text,
+            "text": sanitized_formatting,
             "visibility": visibility
         });
 
@@ -182,7 +183,7 @@ pub fn create_post(text: String) {
 
         println!("https://{}/notes/{}", instance, res.created_note.id);
     } else {
-        println!("The following post would have been created:\n{}", sanitized_text);
+        println!("The following post would have been created:\n{}", sanitized_formatting);
         let cw_config = read_cw_config();
         if cw_config.enable {
             println!("The following CW would have been set:\n{}", cw_config.cw);
@@ -197,6 +198,108 @@ pub fn sanitize_mentions(text: String) -> String {
     // regex
     let re = Regex::new(r"(@\w+)(@[\w.]+)?").unwrap();
     re.replace_all(&text, "<plain>$1$2</plain>").to_string()
+}
+
+pub fn sanitize_formatting(text: String) -> String {
+    let mut result = String::new();
+    let mut chars = text.chars().peekable();
+    let mut in_tag = false;
+    let mut current_tag = String::new();
+    let mut open_parentheses = 0;
+
+    while let Some(c) = chars.next() {
+        match c {
+            '$' if chars.peek() == Some(&'[') => {
+                chars.next(); // consume '['
+                in_tag = true;
+                current_tag = String::from("$[");
+                result.push_str("$[");
+            }
+            '<' if chars.peek() == Some(&'i') => {
+                chars.next(); // consume 'i'
+                if chars.peek() == Some(&'>') {
+                    chars.next(); // consume '>'
+                    in_tag = true;
+                    current_tag = String::from("<i>");
+                    result.push_str("<i>");
+                } else {
+                    result.push(c);
+                }
+            }
+            '<' if chars.peek() == Some(&'s') => {
+                let mut temp = String::new();
+                temp.push(c);
+                while let Some(&next_c) = chars.peek() {
+                    chars.next();
+                    temp.push(next_c);
+                    if temp == "<small>" {
+                        in_tag = true;
+                        current_tag = String::from("<small>");
+                        result.push_str("<small>");
+                        break;
+                    }
+                    if next_c == '>' || temp.len() >= 7 {
+                        result.push_str(&temp);
+                        break;
+                    }
+                }
+            }
+            '(' => {
+                open_parentheses += 1;
+                result.push(c);
+            }
+            ')' => {
+                if open_parentheses > 0 {
+                    open_parentheses -= 1;
+                }
+                result.push(c);
+            }
+            ']' if in_tag && current_tag == "$[" => {
+                in_tag = false;
+                result.push(']');
+            }
+            '>' if in_tag && (current_tag == "<i>" || current_tag == "<small>") => {
+                if chars.peek() == Some(&'/') {
+                    let mut temp = String::new();
+                    temp.push(c);
+                    while let Some(&next_c) = chars.peek() {
+                        chars.next();
+                        temp.push(next_c);
+                        if (temp == "</i>" && current_tag == "<i>") || 
+                           (temp == "</small>" && current_tag == "<small>") {
+                            in_tag = false;
+                            result.push_str(&temp);
+                            break;
+                        }
+                        if next_c == '>' || temp.len() >= 8 {
+                            result.push_str(&temp);
+                            break;
+                        }
+                    }
+                } else {
+                    result.push(c);
+                }
+            }
+            _ => result.push(c),
+        }
+    }
+
+    // Close any unclosed tags and parentheses
+    if in_tag {
+        match current_tag.as_str() {
+            "$[" => result.push(']'),
+            "<i>" => result.push_str("</i>"),
+            "<small>" => result.push_str("</small>"),
+            _ => {}
+        }
+    }
+
+    // Close any remaining open parentheses
+    for _ in 0..open_parentheses {
+        result.push(')');
+    }
+
+    result
 }
 
 #[cfg(test)]
