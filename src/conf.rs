@@ -1,4 +1,4 @@
-use std::{fs, io::Read};
+use std::{cmp::min, fs, io::Read};
 
 use serde::{Deserialize, Serialize};
 
@@ -103,7 +103,9 @@ pub fn read_cw_config() -> ReturnedCWConfiguration {
 pub fn read_multiplier() -> i64 {
     let config = read_config();
 
-    config.multiplier.unwrap_or(1)
+    let mult = config.multiplier.unwrap_or(1);
+
+    min(mult, 1)
 }
 
 pub fn read_visibility() -> String {

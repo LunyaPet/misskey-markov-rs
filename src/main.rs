@@ -26,7 +26,7 @@ fn main() {
 
     let mut str = String::new();
 
-    for _ in 1..conf::read_multiplier() {
+    for _ in 0..conf::read_multiplier() {
         let chunk = chain.generate_str();
         str.push_str(&chunk);
         str.push_str(" ");
