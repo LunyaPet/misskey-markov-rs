@@ -24,8 +24,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-          profile: minimal
-          target: ${{ matrix.arch }}
+          target: ${{ matrix.arch }}-unknown-linux-gnu
 
       - name: Build
         run: cargo build --release --target ${{ matrix.arch }}
