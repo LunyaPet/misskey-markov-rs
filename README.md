@@ -1,6 +1,6 @@
 # Misskey Markov Bot in Rust
 
-> This repository is a mirror and I strongly recommend you check the upstream on [https://code.mldchan.dev/mld/misskey-markov-rs](https://code.mldchan.dev/mld/misskey-markov-rs)! This is a mirror that's always synced, but issues, PR's, projects and releases aren't. You can always make an account there and fork it there, or you can fork it here on GitHub.
+> This repository is a mirror and I strongly recommend you check the upstream on [https://git.lunya.pet/Lunya/misskey-markov-rs](https://git.lunya.pet/Lunya/misskey-markov-rs)! This is a mirror that's always synced, but issues, PR's, projects and releases aren't. You can always make an account there and fork it there, or you can fork it here on GitHub.
 
 A markov bot for [Misskey](https://misskey-hub.net/) instances. Written in Rust.
 
